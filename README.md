@@ -36,6 +36,11 @@ docker compose up --build
 | Health check | http://localhost:8080/actuator/health |
 | Kafka UI (optional) | `docker compose --profile tools up` → http://localhost:8081 |
 
+After the first `docker compose up --build`, Docker Desktop shows the three images the project
+uses: Kafka (pulled from Docker Hub), plus the backend and frontend built from this repo.
+
+![Docker Desktop showing the apache/kafka, quizclash-backend and quizclash-frontend images](docs/images/docker-desktop-images.png)
+
 **Demo:** open http://localhost:5173 in two browser windows (or two tabs). In the first,
 click **Create room**. In the second, enter the code and a nickname. Back in the host
 window, click **Start game**.
