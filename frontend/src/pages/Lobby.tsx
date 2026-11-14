@@ -40,7 +40,15 @@ export default function Lobby({ room, session }: { room: RoomView; session: Sess
         {isHost ? (
           <>
             <div className="card row">
-              <span className="muted">{room.questionCount} questions ready</span>
+              <span className="muted">
+                {room.questionCount} questions ready
+                {room.players.length === 0 && (
+                  <>
+                    <br />
+                    <span className="small">Start is enabled once at least one player joins. Open the link above in another window (incognito) to join.</span>
+                  </>
+                )}
+              </span>
               <button onClick={start} disabled={room.players.length === 0}>Start game ▶</button>
             </div>
             {error && <p className="error">{error}</p>}
