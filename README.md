@@ -53,42 +53,42 @@ cd frontend && npm install && npm run dev    # Node 20+; Vite proxies /api and /
 ```mermaid
 flowchart LR
     subgraph Browser["React (Vite + TS)"]
-        UI[Home / Lobby / Game / Podium]
-        Chat[ChatPanel]
+        UI["Home / Lobby / Game / Podium"]
+        Chat["ChatPanel"]
     end
 
     subgraph Backend["Spring Boot (one app)"]
-        RC[RoomController<br/>REST]
-        RS[RoomService<br/>in-memory rooms]
-        AP[AnswerProducer]
-        SC[ScoringConsumer<br/>group: scoring]
-        WS[RoomBroadcaster<br/>WebSocket]
-        BOT[BotService<br/>Spring AI ChatClient]
-        TOOLS[GameTools<br/>@Tool]
-        AUD[AuditConsumer<br/>group: audit]
+        RC["RoomController<br/>REST"]
+        RS["RoomService<br/>in-memory rooms"]
+        AP["AnswerProducer"]
+        SC["ScoringConsumer<br/>group: scoring"]
+        WS["RoomBroadcaster<br/>WebSocket"]
+        BOT["BotService<br/>Spring AI ChatClient"]
+        TOOLS["GameTools<br/>Tool methods"]
+        AUD["AuditConsumer<br/>group: audit"]
     end
 
     subgraph Kafka["Kafka (KRaft)"]
-        QA[(quiz-answers<br/>key = roomCode)]
-        GE[(game-events)]
+        QA[("quiz-answers<br/>key = roomCode")]
+        GE[("game-events")]
     end
 
-    LLM[(LLM<br/>OpenAI)]
+    LLM[("LLM<br/>OpenAI")]
 
-    UI -- "POST /api/rooms/..." --> RC
+    UI -->|"POST /api/rooms/..."| RC
     RC --> RS
-    RC -- "POST /answers" --> AP
-    AP -- publish --> QA
-    QA -- consume --> SC
-    SC -- score + update --> RS
-    RS -- push --> WS
-    WS -- "ws://.../ws/rooms/{code}" --> UI
-    RS -- lifecycle --> GE
+    RC -->|"POST /answers"| AP
+    AP -->|"publish"| QA
+    QA -->|"consume"| SC
+    SC -->|"score + update"| RS
+    RS -->|"push"| WS
+    WS -->|"ws://.../ws/rooms/CODE"| UI
+    RS -->|"lifecycle"| GE
     GE --> AUD
 
-    Chat -- "POST /api/bot/chat (SSE)" --> BOT
+    Chat -->|"POST /api/bot/chat (SSE)"| BOT
     BOT <--> LLM
-    BOT -- tool calls --> TOOLS
+    BOT -->|"tool calls"| TOOLS
     TOOLS --> RS
 ```
 
