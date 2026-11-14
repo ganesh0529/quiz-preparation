@@ -48,6 +48,18 @@ export const api = {
 
   generateQuestions: (topic: string, count: number, difficulty: string) =>
     request<GeneratedQuestion[]>('/api/bot/questions', { topic, count, difficulty }),
+
+  /** multipart/form-data upload; the browser sets the Content-Type boundary itself. */
+  generateFromDocument: async (file: File, count: number, difficulty: string, focus: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('count', String(count));
+    form.append('difficulty', difficulty);
+    if (focus.trim()) form.append('focus', focus.trim());
+    const res = await fetch('/api/bot/questions/from-document', { method: 'POST', body: form });
+    if (!res.ok) throw new Error(await errorMessage(res));
+    return (await res.json()) as GeneratedQuestion[];
+  },
 };
 
 /**

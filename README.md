@@ -9,7 +9,8 @@ readable project.
 - Questions are pushed live; faster correct answers earn more points
 - Live leaderboard after every question, podium at the end
 - **Quizzy**, the AI host: chats in the lobby, gives hints (for half points),
-  generates new questions, and answers "who's winning?" by calling game tools
+  generates new questions on a topic **or from your uploaded study material** (PDF, Word,
+  PowerPoint, text), and answers "who's winning?" by calling game tools
 
 > New to the codebase? Read [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) for a guided tour,
 > and [docs/CHATBOT.md](docs/CHATBOT.md) for the AI chatbot and every Spring dependency used.
@@ -159,6 +160,7 @@ answer), not `clientTimestamp`, because a browser clock can be wrong or faked.
 | 1. AI host in the lobby | `POST /api/bot/chat` | `ChatClient` streaming, system prompt per game phase, `MessageChatMemoryAdvisor` (one memory per room + player) |
 | 2. Hints for points | `POST /api/bot/hint` | Streaming; hint marked as used → that answer scores half |
 | 3. Question generation | `POST /api/bot/questions` | Structured output: `.call().entity(GeneratedQuestions.class)` |
+| 3b. Questions from a document | `POST /api/bot/questions/from-document` | `TikaDocumentReader` extracts the text, then structured output; each question carries its source passage |
 | 4. "Who's winning?" | `POST /api/bot/chat` | Tool calling: `@Tool` methods in `GameTools`, room/player passed via `ToolContext` |
 
 Safety choices:
@@ -189,6 +191,7 @@ The code only depends on the provider-neutral `ChatModel` / `ChatClient`.
 | POST | `/api/bot/chat` | `{ roomCode, playerId?, message }` | SSE stream |
 | POST | `/api/bot/hint` | `{ roomCode, playerId }` | SSE stream |
 | POST | `/api/bot/questions` | `{ topic, count, difficulty }` | JSON list |
+| POST | `/api/bot/questions/from-document` | multipart: `file`, `count`, `difficulty`, `focus?` | JSON list with `source` passages, max 10 MB |
 
 Errors use RFC 7807 problem details: `{ "status": 409, "detail": "Already answered" }`.
 

@@ -3,6 +3,11 @@ package com.quizclash.bot;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quizclash.bot.BotService.GeneratedQuestion;
+import com.quizclash.game.GameException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -40,10 +45,12 @@ public class BotController {
                                   String difficulty) {}
 
     private final BotService bot;
+    private final DocumentTextExtractor extractor;
     private final ObjectMapper json;
 
-    public BotController(BotService bot, ObjectMapper json) {
+    public BotController(BotService bot, DocumentTextExtractor extractor, ObjectMapper json) {
         this.bot = bot;
+        this.extractor = extractor;
         this.json = json;
     }
 
@@ -65,6 +72,22 @@ public class BotController {
         int count = req.count() == null ? 5 : req.count();
         String difficulty = req.difficulty() == null || req.difficulty().isBlank() ? "medium" : req.difficulty();
         return bot.generateQuestions(req.topic(), count, difficulty);
+    }
+
+    /**
+     * Generate questions from an uploaded document (multipart/form-data).
+     * Fields: file (required), count 1-10, difficulty, focus (optional, e.g. "chapter 3").
+     */
+    @PostMapping(value = "/questions/from-document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public List<GeneratedQuestion> generateFromDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "5") int count,
+            @RequestParam(defaultValue = "medium") String difficulty,
+            @RequestParam(required = false) String focus) {
+        if (count < 1 || count > 10) throw new GameException(HttpStatus.BAD_REQUEST, "count must be 1 to 10");
+        if (focus != null && focus.length() > 200) throw new GameException(HttpStatus.BAD_REQUEST, "focus is too long");
+        var excerpts = extractor.extract(file);
+        return bot.generateFromDocument(excerpts, count, difficulty.isBlank() ? "medium" : difficulty, focus);
     }
 
     private Flux<ServerSentEvent<String>> toSse(Flux<String> tokens) {

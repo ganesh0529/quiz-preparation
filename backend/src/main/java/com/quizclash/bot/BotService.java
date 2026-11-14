@@ -26,7 +26,8 @@ import java.util.Map;
  * <ol>
  *   <li>Lobby host / live chat - {@link #chat}: streamed, with memory, with tools.</li>
  *   <li>Hints for points - {@link #hint}: streamed, costs half the points.</li>
- *   <li>Question generation - {@link #generateQuestions}: structured JSON output.</li>
+ *   <li>Question generation - {@link #generateQuestions} (topic) and
+ *       {@link #generateFromDocument} (uploaded file): structured JSON output.</li>
  *   <li>Live game questions - the {@link GameTools} attached to {@link #chat}.</li>
  * </ol>
  */
@@ -36,7 +37,8 @@ public class BotService {
     private static final Logger log = LoggerFactory.getLogger(BotService.class);
     static final String OFFLINE = "🤖 Quizzy is offline right now (no AI key configured). The game still works!";
 
-    public record GeneratedQuestion(String question, List<String> options, int correctIndex) {}
+    /** {@code source} is only filled for questions made from an uploaded document. */
+    public record GeneratedQuestion(String question, List<String> options, int correctIndex, String source) {}
     /** Wrapper object: models produce a JSON object more reliably than a bare array. */
     public record GeneratedQuestions(List<GeneratedQuestion> questions) {}
 
@@ -110,13 +112,42 @@ public class BotService {
                 .user(BotPrompts.generateUser(topic, count, difficulty))
                 .call()
                 .entity(GeneratedQuestions.class);   // Spring AI adds the JSON schema and parses the reply
+        return clean(out, count, false);
+    }
 
+    /**
+     * Feature 3b: questions from an uploaded document. Same structured output,
+     * but the model may only ask about what the excerpts say, and each question
+     * carries the passage that proves its answer.
+     */
+    public List<GeneratedQuestion> generateFromDocument(DocumentTextExtractor.Excerpts doc,
+                                                        int count, String difficulty, String focus) {
+        if (!enabled) throw new GameException(HttpStatus.SERVICE_UNAVAILABLE, "AI is not configured (OPENAI_API_KEY)");
+        log.info("Generating {} questions from {} ({} chars, {} excerpt(s))",
+                count, doc.fileName(), doc.totalChars(), doc.parts().size());
+        GeneratedQuestions out = plainClient.prompt()
+                .system(BotPrompts.DOCUMENT_SYSTEM)
+                .user(BotPrompts.documentUser(doc.fileName(), doc.parts(), count, difficulty, focus))
+                .call()
+                .entity(GeneratedQuestions.class);
+        return clean(out, count, true);
+    }
+
+    private static List<GeneratedQuestion> clean(GeneratedQuestions out, int count, boolean keepSource) {
         if (out == null || out.questions() == null) return List.of();
         return out.questions().stream()
                 .filter(BotService::isValid)
+                .map(q -> new GeneratedQuestion(q.question(), q.options(), q.correctIndex(),
+                        keepSource ? trimSource(q.source()) : null))
                 .map(BotService::shuffleOptions)
                 .limit(count)
                 .toList();
+    }
+
+    private static String trimSource(String source) {
+        if (source == null || source.isBlank()) return null;
+        String s = source.strip();
+        return s.length() <= 500 ? s : s.substring(0, 497) + "...";
     }
 
     private static boolean isValid(GeneratedQuestion q) {
@@ -131,6 +162,6 @@ public class BotService {
         String correct = q.options().get(q.correctIndex());
         List<String> options = new ArrayList<>(q.options());
         Collections.shuffle(options);
-        return new GeneratedQuestion(q.question(), options, options.indexOf(correct));
+        return new GeneratedQuestion(q.question(), options, options.indexOf(correct), q.source());
     }
 }

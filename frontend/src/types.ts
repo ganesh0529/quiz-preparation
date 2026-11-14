@@ -59,6 +59,8 @@ export interface GeneratedQuestion {
   question: string;
   options: string[];
   correctIndex: number;
+  /** Passage from the uploaded document that proves the answer (document questions only). */
+  source?: string | null;
 }
 
 /** Messages pushed over /ws/rooms/{code}: {"type": ..., "payload": ...} */

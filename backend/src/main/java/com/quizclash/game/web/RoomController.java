@@ -41,7 +41,8 @@ public class RoomController {
                                 Long clientTimestamp) {}
     public record QuestionInput(@NotBlank String question,
                                 @NotEmpty @Size(min = 4, max = 4) List<@NotBlank String> options,
-                                @Min(0) @Max(3) int correctIndex) {}
+                                @Min(0) @Max(3) int correctIndex,
+                                @Size(max = 600) String source) {}
     public record AddQuestionsRequest(@NotBlank String hostToken,
                                       @NotEmpty List<@Valid QuestionInput> questions) {}
 
@@ -74,7 +75,7 @@ public class RoomController {
     public RoomView addQuestions(@PathVariable String code, @Valid @RequestBody AddQuestionsRequest req) {
         List<Question> questions = req.questions().stream()
                 .map(q -> new Question("gen-" + UUID.randomUUID().toString().substring(0, 8),
-                        q.question(), q.options(), q.correctIndex()))
+                        q.question(), q.options(), q.correctIndex(), q.source()))
                 .toList();
         rooms.addQuestions(code, req.hostToken(), questions);
         return rooms.view(code);

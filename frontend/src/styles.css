@@ -127,5 +127,17 @@ select { width: auto; }
 @keyframes blink { 50% { opacity: .2; } }
 .chat-input { display: flex; gap: 8px; }
 
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab { background: var(--panel-2); color: var(--muted); padding: 8px 14px; font-weight: 600; }
+.tab.active { background: var(--accent-2); color: white; }
+.stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.file-drop {
+  display: block; border: 2px dashed #4a3d85; border-radius: 10px; padding: 18px;
+  text-align: center; cursor: pointer; background: #150f2b;
+}
+.file-drop:hover { border-color: var(--accent-2); }
+.file-drop input[type='file'] { display: none; }
+.source { margin: 4px 0 12px; padding: 6px 10px; border-left: 3px solid var(--accent-2); color: var(--muted); font-size: 13px; font-style: italic; }
+
 .draft { padding-left: 20px; }
 .draft ul { list-style: none; padding-left: 6px; margin: 6px 0 12px; }
