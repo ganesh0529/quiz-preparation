@@ -11,7 +11,8 @@ readable project.
 - **Quizzy**, the AI host: chats in the lobby, gives hints (for half points),
   generates new questions, and answers "who's winning?" by calling game tools
 
-> New to the codebase? Read [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) for a guided tour.
+> New to the codebase? Read [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) for a guided tour,
+> and [docs/CHATBOT.md](docs/CHATBOT.md) for the AI chatbot and every Spring dependency used.
 
 ---
 
