@@ -21,8 +21,8 @@ Requirements: Docker + Docker Compose. An OpenAI API key is optional (without it
 game works fully, only the chatbot is offline).
 
 ```bash
-git clone https://github.com/<you>/quizclash.git
-cd quizclash
+git clone https://github.com/ganesh0529/quiz-preparation.git
+cd quiz-preparation
 cp .env.example .env          # put your OPENAI_API_KEY in it (optional)
 docker compose up --build
 ```
@@ -199,7 +199,7 @@ WebSocket messages (`{ type, payload }`): `ROOM_STATE`, `ROOM_UPDATE`, `QUESTION
 ## Project layout
 
 ```
-quizclash/
+quiz-preparation/
 ├── docker-compose.yml            Kafka (KRaft) + backend + frontend (+ optional Kafka UI)
 ├── backend/                      Spring Boot 3.5, Java 21
 │   └── src/main/java/com/quizclash/
